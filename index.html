@@ -1,0 +1,1674 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1">
+<title>Avartan — Indian Rhythm Trainer</title>
+<meta name="description" content="Learn and practice the rhythmic concepts of Hindustani and Carnatic classical percussion — talas, layakari, bols, and tihais — by ear and by hand.">
+<link rel="icon" href="data:,">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#15131c;
+  --surface:#1e1a28;
+  --surface2:#262032;
+  --surface3:#2f2840;
+  --line:#3a3348;
+  --ivory:#efe8d8;
+  --muted:#a89e8c;
+  --muted-dim:#726a5f;
+  --marigold:#e8a33d;
+  --marigold-soft:#e8a33d33;
+  --teal:#4fa39e;
+  --teal-soft:#4fa39e33;
+  --rose:#c1524f;
+  --rose-soft:#c1524f33;
+  --khali:#6b6486;
+  --font-display:'Fraunces', Georgia, serif;
+  --font-body:'Inter', -apple-system, sans-serif;
+  --font-mono:'JetBrains Mono', ui-monospace, monospace;
+}
+*{box-sizing:border-box; -webkit-tap-highlight-color: transparent;}
+html,body{height:100%;}
+body{
+  margin:0;
+  background:var(--ink);
+  color:var(--ivory);
+  font-family:var(--font-body);
+  overscroll-behavior-y:none;
+}
+#app{
+  display:flex;
+  flex-direction:column;
+  min-height:100vh;
+  min-height:100dvh;
+}
+header.top{
+  padding: max(14px, env(safe-area-inset-top)) 18px 10px;
+  text-align:left;
+  border-bottom:1px solid var(--line);
+  background:linear-gradient(180deg, var(--surface), var(--ink));
+  flex-shrink:0;
+}
+header.top h1{
+  font-family:var(--font-display);
+  font-optical-sizing:auto;
+  font-weight:700;
+  font-size:1.5rem;
+  margin:0 0 2px;
+  letter-spacing:0.01em;
+  color:var(--ivory);
+}
+header.top h1 .dot{color:var(--marigold);}
+header.top p{
+  margin:0;
+  font-size:0.78rem;
+  color:var(--muted);
+  letter-spacing:0.02em;
+}
+main{
+  flex:1;
+  overflow-y:auto;
+  -webkit-overflow-scrolling:touch;
+  padding-bottom: calc(78px + env(safe-area-inset-bottom));
+}
+.tab{display:none; padding:18px 16px 8px; max-width:640px; margin:0 auto;}
+.tab.active{display:block; animation:fade .25s ease;}
+@keyframes fade{from{opacity:0; transform:translateY(4px);} to{opacity:1; transform:translateY(0);}}
+
+/* Tag chips (tradition color coding) */
+.tag{
+  display:inline-flex; align-items:center; gap:4px;
+  font-family:var(--font-mono); font-size:0.62rem; font-weight:700;
+  letter-spacing:0.04em; text-transform:uppercase;
+  padding:2px 7px; border-radius:20px; border:1px solid transparent;
+}
+.tag.H{color:var(--marigold); border-color:var(--marigold-soft); background:var(--marigold-soft);}
+.tag.C{color:var(--teal); border-color:var(--teal-soft); background:var(--teal-soft);}
+.tag.N{color:var(--rose); border-color:var(--rose-soft); background:var(--rose-soft);}
+
+h2.section-title{
+  font-family:var(--font-display); font-weight:600; font-size:1.15rem;
+  margin: 22px 0 10px; color:var(--ivory);
+  display:flex; align-items:center; gap:8px;
+}
+h2.section-title:first-child{margin-top:2px;}
+.card{
+  background:var(--surface); border:1px solid var(--line); border-radius:16px;
+  padding:16px; margin-bottom:14px;
+}
+.muted{color:var(--muted); font-size:0.85rem; line-height:1.5;}
+.controls-row{display:flex; align-items:center; gap:10px; flex-wrap:wrap;}
+select{
+  background:var(--surface2); color:var(--ivory); border:1px solid var(--line);
+  border-radius:10px; padding:10px 12px; font-family:var(--font-body); font-size:0.92rem;
+  width:100%; appearance:none; -webkit-appearance:none;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23a89e8c'/%3E%3C/svg%3E");
+  background-repeat:no-repeat; background-position:right 14px center;
+}
+input[type=text], input[type=number]{
+  background:var(--surface2); color:var(--ivory); border:1px solid var(--line);
+  border-radius:10px; padding:9px 10px; font-family:var(--font-mono); font-size:0.9rem;
+}
+button{
+  font-family:var(--font-body); cursor:pointer; border:none; border-radius:12px;
+  transition: transform .08s ease, background .15s ease;
+}
+button:active{transform:scale(0.96);}
+.btn{
+  background:var(--surface2); color:var(--ivory); border:1px solid var(--line);
+  padding:10px 14px; font-size:0.85rem; font-weight:600;
+}
+.btn:hover{background:var(--surface3);}
+.btn-primary{
+  background:var(--marigold); color:#1a1206; font-weight:700; padding:13px 22px;
+  font-size:0.95rem; box-shadow:0 4px 16px -4px var(--marigold-soft);
+}
+.btn-primary.playing{background:var(--rose); color:#2a0d0c; box-shadow:0 4px 16px -4px var(--rose-soft);}
+.chip{
+  background:var(--surface2); border:1px solid var(--line); color:var(--muted);
+  border-radius:10px; padding:8px 12px; font-size:0.82rem; font-weight:600; font-family:var(--font-mono);
+}
+.chip.active{background:var(--marigold); color:#1a1206; border-color:var(--marigold);}
+.chip.small{padding:6px 10px; font-size:0.72rem;}
+
+/* Transport */
+.transport{display:flex; align-items:center; gap:14px; margin-top:14px; flex-wrap:wrap;}
+.bpm-readout{font-family:var(--font-mono); font-size:1.3rem; font-weight:700; color:var(--marigold); min-width:70px;}
+input[type=range]{
+  -webkit-appearance:none; appearance:none; width:100%; height:4px; border-radius:4px;
+  background:var(--line); outline:none;
+}
+input[type=range]::-webkit-slider-thumb{
+  -webkit-appearance:none; width:22px; height:22px; border-radius:50%;
+  background:var(--marigold); border:3px solid var(--ink); cursor:pointer;
+  box-shadow:0 0 0 1px var(--marigold);
+}
+.slider-row{display:flex; align-items:center; gap:10px; width:100%;}
+
+/* Wheel */
+.wheel-wrap{display:flex; justify-content:center; padding:6px 0 2px;}
+svg#wheel{width:min(88vw, 320px); height:min(88vw,320px); overflow:visible;}
+.beat-dot{transition: r .12s ease, fill .12s ease, filter .12s ease;}
+.beat-dot.active{filter:drop-shadow(0 0 6px currentColor);}
+.wheel-center-count{
+  font-family:var(--font-mono); font-weight:700; fill:var(--ivory);
+}
+.wheel-center-label{font-family:var(--font-body); fill:var(--muted); font-size:9px;}
+
+.legend{display:flex; gap:14px; justify-content:center; flex-wrap:wrap; margin:8px 0 2px; font-size:0.72rem; color:var(--muted);}
+.legend span.sw{display:inline-block; width:9px; height:9px; border-radius:50%; margin-right:5px; vertical-align:middle;}
+
+.bol-line{
+  font-family:var(--font-mono); font-size:1rem; line-height:2.1; letter-spacing:0.02em;
+  overflow-x:auto; white-space:nowrap; padding:10px 4px; -webkit-overflow-scrolling:touch;
+}
+.bol-line .grp{display:inline-block; margin-right:14px;}
+.bol-line .lbl{display:block; font-size:0.62rem; color:var(--marigold); text-align:left; letter-spacing:0.08em;}
+.bol-line .tok{
+  display:inline-block; padding:2px 6px; border-radius:6px; color:var(--muted);
+  transition: background .1s ease, color .1s ease;
+}
+.bol-line .tok.on{background:var(--marigold); color:#1a1206; font-weight:700;}
+
+.tala-desc{font-size:0.86rem; color:var(--muted); line-height:1.5; margin-top:6px;}
+
+/* Learn cards */
+.concept{
+  background:var(--surface); border:1px solid var(--line); border-radius:14px;
+  margin-bottom:10px; overflow:hidden;
+}
+.concept summary{
+  list-style:none; cursor:pointer; padding:13px 16px; display:flex; align-items:center;
+  justify-content:space-between; gap:10px;
+}
+.concept summary::-webkit-details-marker{display:none;}
+.concept summary .term{font-family:var(--font-display); font-weight:600; font-size:1.02rem;}
+.concept summary .chev{color:var(--muted); transition:transform .2s ease; flex-shrink:0;}
+.concept[open] summary .chev{transform:rotate(90deg);}
+.concept .body{padding:0 16px 16px;}
+.concept .def{font-size:0.88rem; line-height:1.55; color:var(--ivory); margin:0 0 10px;}
+.concept .why{
+  font-size:0.82rem; line-height:1.5; color:var(--muted);
+  border-left:2px solid var(--marigold); padding-left:10px;
+}
+.concept .why b{color:var(--marigold); font-weight:700;}
+.filter-row{display:flex; gap:8px; overflow-x:auto; padding:2px 0 14px; -webkit-overflow-scrolling:touch;}
+.filter-row .chip{flex-shrink:0;}
+
+/* Subdivide */
+.pulse-track{display:flex; justify-content:center; gap:10px; padding:24px 0 10px; flex-wrap:wrap;}
+.pulse-dot{
+  width:20px; height:20px; border-radius:50%; background:var(--surface3);
+  border:2px solid var(--line); transition:all .1s ease;
+}
+.pulse-dot.main{width:26px; height:26px;}
+.pulse-dot.active{background:var(--marigold); border-color:var(--marigold); box-shadow:0 0 14px var(--marigold-soft); transform:scale(1.15);}
+.pulse-dot.main.active{background:var(--rose); border-color:var(--rose); box-shadow:0 0 14px var(--rose-soft);}
+.syllable-readout{
+  text-align:center; font-family:var(--font-mono); font-size:2rem; font-weight:700;
+  color:var(--marigold); min-height:2.6em; display:flex; align-items:center; justify-content:center;
+}
+.n-picker{display:flex; gap:8px; overflow-x:auto; padding:4px 0 6px;}
+
+/* Bols sequencer */
+.palette{display:flex; gap:8px; flex-wrap:wrap; margin:10px 0;}
+.pal-chip{
+  padding:9px 13px; border-radius:10px; font-family:var(--font-mono); font-weight:700; font-size:0.85rem;
+  border:2px solid transparent; cursor:pointer;
+}
+.pal-chip.selected{border-color:var(--ivory);}
+.grid-cells{display:flex; flex-wrap:wrap; gap:6px; margin:12px 0;}
+.cell{
+  width:42px; height:42px; border-radius:9px; background:var(--surface2); border:1px solid var(--line);
+  display:flex; align-items:center; justify-content:center; font-family:var(--font-mono); font-weight:700;
+  font-size:0.7rem; color:var(--ivory); cursor:pointer; user-select:none; position:relative;
+}
+.cell.playing{outline:2px solid var(--ivory); outline-offset:1px;}
+.cell .idx{position:absolute; top:1px; left:3px; font-size:0.5rem; color:var(--muted-dim);}
+.stepper{display:flex; align-items:center; gap:10px;}
+.stepper button{width:34px; height:34px; border-radius:50%; background:var(--surface2); color:var(--ivory); border:1px solid var(--line); font-size:1.1rem;}
+.preset-row{display:flex; gap:8px; overflow-x:auto; padding:2px 0 4px;}
+.preset-row .chip{flex-shrink:0;}
+
+.tihai-grid{display:flex; gap:2px; flex-wrap:wrap; margin:12px 0; align-items:center;}
+.tihai-note{width:14px; height:14px; border-radius:3px; background:var(--surface3);}
+.tihai-note.gap{background:transparent; border:1px dashed var(--line);}
+.tihai-note.sam{background:var(--marigold); width:16px; height:16px; border-radius:50%;}
+.result-box{
+  background:var(--surface2); border:1px solid var(--line); border-radius:12px; padding:14px;
+  margin-top:12px; font-family:var(--font-mono);
+}
+.result-box .big{font-size:1.6rem; font-weight:700; color:var(--marigold);}
+.result-box .sub{font-size:0.78rem; color:var(--muted); margin-top:4px;}
+
+label.field-label{display:block; font-size:0.72rem; color:var(--muted); margin-bottom:4px; letter-spacing:0.03em; text-transform:uppercase;}
+
+/* Bottom nav */
+nav#tabbar{
+  position:fixed; bottom:0; left:0; right:0;
+  display:flex; background:var(--surface); border-top:1px solid var(--line);
+  padding-bottom:env(safe-area-inset-bottom);
+  z-index:20;
+}
+nav#tabbar button{
+  flex:1; background:none; border:none; padding:10px 4px 8px; display:flex; flex-direction:column;
+  align-items:center; gap:4px; color:var(--muted-dim); font-size:0.68rem; font-weight:600;
+  border-radius:0;
+}
+nav#tabbar button svg{width:20px; height:20px; stroke:var(--muted-dim); fill:none; stroke-width:1.6;}
+nav#tabbar button.active{color:var(--marigold);}
+nav#tabbar button.active svg{stroke:var(--marigold);}
+
+::-webkit-scrollbar{display:none;}
+.hint{font-size:0.72rem; color:var(--muted-dim); margin-top:8px; line-height:1.5;}
+.divider{height:1px; background:var(--line); margin:16px 0;}
+.two-col{display:grid; grid-template-columns:1fr 1fr; gap:10px;}
+
+/* Lesson banner */
+.lesson-banner{
+  position:fixed; left:0; right:0; top:0; z-index:30;
+  background:linear-gradient(180deg, var(--surface3), var(--surface2));
+  border-bottom:1px solid var(--marigold-soft);
+  padding: calc(12px + env(safe-area-inset-top)) 16px 12px;
+  box-shadow:0 8px 22px -10px #000000a0;
+  display:none;
+}
+.lesson-banner.review{border-bottom:1px solid var(--teal-soft);}
+.lesson-banner .lb-eyebrow{font-family:var(--font-mono); font-size:0.64rem; letter-spacing:0.06em; text-transform:uppercase; color:var(--marigold);}
+.lesson-banner.review .lb-eyebrow{color:var(--teal);}
+.lesson-banner .lb-title{font-family:var(--font-display); font-weight:700; font-size:1.05rem; margin:3px 0 5px; color:var(--ivory);}
+.lesson-banner .lb-instruction{font-size:0.82rem; color:var(--muted); line-height:1.45; margin:0 0 11px;}
+.lesson-banner .lb-actions{display:flex; gap:8px; flex-wrap:wrap;}
+.lesson-banner .lb-actions button{padding:9px 13px; font-size:0.78rem;}
+body.has-banner main{padding-top:158px;}
+
+/* Path tab */
+.progress-card{display:flex; align-items:center; gap:16px;}
+.progress-ring{flex-shrink:0;}
+.progress-stats{flex:1;}
+.progress-stats .num{font-family:var(--font-display); font-size:1.7rem; font-weight:700; color:var(--marigold); line-height:1;}
+.progress-stats .lbl{font-size:0.76rem; color:var(--muted); margin-top:2px;}
+.progress-actions{display:flex; gap:10px; margin-top:14px;}
+.progress-actions button{flex:1;}
+.module-block{margin-bottom:18px;}
+.module-block h3{font-family:var(--font-display); font-size:0.98rem; font-weight:600; margin:0 0 3px; color:var(--ivory);}
+.module-block .mb-blurb{font-size:0.76rem; color:var(--muted); margin:0 0 9px; line-height:1.4;}
+.lesson-row{
+  display:flex; align-items:center; gap:10px; padding:11px 12px; background:var(--surface);
+  border:1px solid var(--line); border-radius:12px; margin-bottom:6px; cursor:pointer;
+}
+.lesson-row:active{background:var(--surface2);}
+.lesson-row .check{
+  width:20px; height:20px; border-radius:50%; border:2px solid var(--line); flex-shrink:0;
+  display:flex; align-items:center; justify-content:center; font-size:0.65rem; color:transparent;
+}
+.lesson-row.done .check{background:var(--marigold); border-color:var(--marigold); color:#1a1206;}
+.lesson-row .lr-title{flex:1; font-size:0.85rem; font-weight:600;}
+.lesson-row .lr-type{font-family:var(--font-mono); font-size:0.6rem; color:var(--muted-dim); flex-shrink:0;}
+.lesson-row.current{border-color:var(--marigold);}
+
+/* Polyrhythm */
+.poly-toggle{display:flex; gap:8px; margin-bottom:12px;}
+.poly-toggle .chip{flex:1; text-align:center; padding:9px 6px;}
+.poly-row-label{font-family:var(--font-mono); font-size:0.7rem; color:var(--muted); margin:10px 0 4px;}
+.poly-track{display:flex; justify-content:space-between; align-items:center; padding:4px 2px; gap:2px;}
+.poly-dot{
+  width:15px; height:15px; border-radius:50%; background:var(--surface3); border:2px solid var(--line);
+  transition: all .08s ease; flex-shrink:0;
+}
+.poly-dot.a{border-color:var(--marigold);}
+.poly-dot.b{border-color:var(--teal);}
+.poly-dot.active.a{background:var(--marigold); box-shadow:0 0 12px var(--marigold-soft); transform:scale(1.35);}
+.poly-dot.active.b{background:var(--teal); box-shadow:0 0 12px var(--teal-soft); transform:scale(1.35);}
+.poly-cycle-bar{height:3px; background:var(--line); border-radius:3px; margin:16px 0 4px; overflow:hidden;}
+.poly-cycle-fill{height:100%; width:0%; background:var(--ivory); opacity:0.55;}
+.poly-preset-row{display:flex; gap:8px; overflow-x:auto; padding:2px 0 10px; -webkit-overflow-scrolling:touch;}
+.poly-preset-row .chip{flex-shrink:0;}
+.poly-preset-row .chip.active{background:var(--rose); color:#2a0d0c; border-color:var(--rose);}
+.poly-custom{display:flex; align-items:center; gap:8px; margin-top:4px; flex-wrap:wrap;}
+.poly-custom input{width:56px; text-align:center;}
+</style>
+</head>
+<body>
+<div id="app">
+
+  <header class="top">
+    <h1>Avartan<span class="dot">.</span></h1>
+    <p>Hindustani &amp; Carnatic rhythm, by ear and by hand</p>
+  </header>
+
+  <div class="lesson-banner" id="lessonBanner">
+    <div class="lb-eyebrow" id="lbEyebrow">Lesson</div>
+    <div class="lb-title" id="lbTitle"></div>
+    <p class="lb-instruction" id="lbInstruction"></p>
+    <div class="lb-actions" id="lbActions"></div>
+  </div>
+
+  <main>
+
+    <!-- ============ TAB: PATH ============ -->
+    <section class="tab active" id="tab-path">
+      <h2 class="section-title">Your path</h2>
+      <div class="card progress-card">
+        <svg class="progress-ring" width="64" height="64" viewBox="0 0 64 64">
+          <circle cx="32" cy="32" r="27" fill="none" stroke="var(--line)" stroke-width="6"/>
+          <circle id="progressRingFill" cx="32" cy="32" r="27" fill="none" stroke="var(--marigold)"
+            stroke-width="6" stroke-linecap="round" transform="rotate(-90 32 32)"
+            stroke-dasharray="169.6" stroke-dashoffset="169.6"/>
+        </svg>
+        <div class="progress-stats">
+          <div class="num" id="progressNum">0 / 0</div>
+          <div class="lbl" id="progressLbl">lessons complete</div>
+        </div>
+      </div>
+      <div class="progress-actions">
+        <button class="btn-primary" id="continueBtn">Continue</button>
+        <button class="btn" id="reviewBtn">Quick review</button>
+      </div>
+      <p class="hint" id="reviewMeta"></p>
+      <div class="divider"></div>
+      <div id="moduleList"></div>
+    </section>
+
+    <!-- ============ TAB: CYCLE ============ -->
+    <section class="tab" id="tab-cycle">
+      <h2 class="section-title">Choose a cycle</h2>
+      <div class="card">
+        <select id="talaSelect"></select>
+        <div id="customPatternWrap" style="display:none; margin-top:10px;">
+          <label class="field-label">Grouping (e.g. 3+2+2)</label>
+          <input type="text" id="customPattern" value="3+2+2" style="width:100%;">
+        </div>
+        <p class="tala-desc" id="talaDesc"></p>
+      </div>
+
+      <div class="card">
+        <div class="wheel-wrap">
+          <svg id="wheel" viewBox="0 0 300 300"></svg>
+        </div>
+        <div class="legend">
+          <span><span class="sw" style="background:var(--marigold)"></span>Sam</span>
+          <span><span class="sw" style="background:#7fc7c2"></span>Tali (clap)</span>
+          <span><span class="sw" style="background:var(--khali)"></span>Khali (wave)</span>
+        </div>
+        <div class="bol-line" id="bolLine"></div>
+
+        <div class="transport">
+          <button class="btn-primary" id="cyclePlayBtn">▶ Play</button>
+          <button class="btn" id="cycleTapBtn">Tap tempo</button>
+        </div>
+        <div class="slider-row" style="margin-top:12px;">
+          <span class="bpm-readout" id="cycleBpmReadout">80</span>
+          <input type="range" id="cycleBpmSlider" min="30" max="220" value="80">
+        </div>
+        <p class="hint">Sam rings a bell. Tali claps. Khali gives a soft, muted thud — deliberately "empty" so you can feel the cycle breathe.</p>
+      </div>
+    </section>
+
+    <!-- ============ TAB: SUBDIVIDE ============ -->
+    <section class="tab" id="tab-subdivide">
+      <h2 class="section-title">Subdivide &amp; polyrhythm</h2>
+      <div class="poly-toggle">
+        <button class="chip active" id="subModeSingleBtn">Single beat</button>
+        <button class="chip" id="subModePolyBtn">Polyrhythm</button>
+      </div>
+
+      <div class="card" id="subSinglePanel">
+        <p class="muted">Pick how many pulses fit inside one beat. In Hindustani terms this is <b style="color:var(--ivory)">layakari</b> (dugun/tigun/chaugun); in Carnatic terms it's the <b style="color:var(--ivory)">gati/nadai</b> of the beat. Same skill either way: hearing a pulse split unevenly without losing the downbeat.</p>
+        <div class="n-picker" id="nPicker"></div>
+        <div class="card" style="background:var(--surface2); margin-top:10px;">
+          <div class="syllable-readout" id="syllableReadout">Ta</div>
+          <div class="pulse-track" id="pulseTrack"></div>
+        </div>
+        <div class="transport">
+          <button class="btn-primary" id="subPlayBtn">▶ Play</button>
+          <button class="btn" id="subTapBtn">Tap tempo</button>
+        </div>
+        <div class="slider-row" style="margin-top:12px;">
+          <span class="bpm-readout" id="subBpmReadout">70</span>
+          <input type="range" id="subBpmSlider" min="30" max="200" value="70">
+        </div>
+        <p class="hint" id="subMeta"></p>
+      </div>
+
+      <div class="card" id="subPolyPanel" style="display:none;">
+        <p class="muted">Two evenly-spaced pulse streams sharing the same span — the backbone of jazz cross-rhythm. <b style="color:var(--marigold)">Marigold</b> is the "over" count, <b style="color:var(--teal)">teal</b> is the reference pulse.</p>
+        <div class="poly-preset-row" id="polyPresetRow"></div>
+        <div class="poly-custom">
+          <label class="field-label" style="margin:0;">Custom</label>
+          <input type="number" id="polyA" value="3" min="2" max="16">
+          <span class="muted">over</span>
+          <input type="number" id="polyB" value="2" min="2" max="16">
+        </div>
+        <p class="tala-desc" id="polyNote"></p>
+        <div class="poly-row-label" id="polyLabelA">3 (marigold)</div>
+        <div class="poly-track" id="polyTrackA"></div>
+        <div class="poly-row-label" id="polyLabelB">2 (teal)</div>
+        <div class="poly-track" id="polyTrackB"></div>
+        <div class="poly-cycle-bar"><div class="poly-cycle-fill" id="polyCycleFill"></div></div>
+        <div class="transport">
+          <button class="btn-primary" id="polyPlayBtn">▶ Play</button>
+          <button class="btn" id="polyTapBtn">Tap tempo</button>
+        </div>
+        <div class="slider-row" style="margin-top:12px;">
+          <span class="bpm-readout" id="polyBpmReadout">76</span>
+          <input type="range" id="polyBpmSlider" min="30" max="180" value="76">
+        </div>
+        <p class="hint">Tempo sets the teal reference pulse — like a quarter note. The marigold pulses fill the exact same span, evenly.</p>
+      </div>
+    </section>
+
+    <!-- ============ TAB: BOLS ============ -->
+    <section class="tab" id="tab-bols">
+      <h2 class="section-title">Build a bol pattern</h2>
+      <div class="card">
+        <div class="preset-row" id="presetRow"></div>
+        <div class="stepper" style="margin:10px 0;">
+          <button id="stepMinus">–</button>
+          <span class="chip" id="stepCount" style="font-size:0.95rem;">16</span>
+          <button id="stepPlus">+</button>
+          <span class="muted" style="font-size:0.78rem;">beats</span>
+        </div>
+        <label class="field-label">Palette — tap a syllable, then tap cells to paint</label>
+        <div class="palette" id="palette"></div>
+        <div class="grid-cells" id="gridCells"></div>
+        <div class="transport">
+          <button class="btn-primary" id="bolPlayBtn">▶ Play</button>
+          <button class="btn" id="bolClearBtn">Clear</button>
+        </div>
+        <div class="slider-row" style="margin-top:12px;">
+          <span class="bpm-readout" id="bolBpmReadout">90</span>
+          <input type="range" id="bolBpmSlider" min="30" max="220" value="90">
+        </div>
+      </div>
+
+      <h2 class="section-title">Tihai / Korvai builder</h2>
+      <div class="card">
+        <p class="muted">A phrase said three times, timed to land exactly on Sam. This is the concept that maps most directly onto jazz phrasing — resolving a lick onto beat 1 of the next chorus.</p>
+        <div class="two-col">
+          <div>
+            <label class="field-label">Phrase length (matras)</label>
+            <input type="number" id="tihaiPhrase" value="3" min="1" max="32" style="width:100%;">
+          </div>
+          <div>
+            <label class="field-label">Gap between repeats</label>
+            <input type="number" id="tihaiGap" value="1" min="0" max="16" style="width:100%;">
+          </div>
+        </div>
+        <label class="field-label" style="margin-top:10px;">Cycle</label>
+        <select id="tihaiTala"></select>
+        <div class="tihai-grid" id="tihaiGrid"></div>
+        <div class="result-box">
+          <div class="big" id="tihaiTotal">11 matras</div>
+          <div class="sub" id="tihaiStart">Begin on matra 6, so the third repeat lands on Sam.</div>
+        </div>
+        <div class="transport">
+          <button class="btn-primary" id="tihaiPlayBtn">▶ Play it</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ TAB: LEARN ============ -->
+    <section class="tab" id="tab-learn">
+      <h2 class="section-title">Concepts</h2>
+      <div class="filter-row" id="filterRow"></div>
+      <div id="conceptList"></div>
+    </section>
+
+  </main>
+
+  <nav id="tabbar">
+    <button data-tab="path" class="active">
+      <svg viewBox="0 0 24 24"><path d="M4 19V5.5A2.5 2.5 0 016.5 3H14l6 6v10a2.5 2.5 0 01-2.5 2.5h-11A2.5 2.5 0 014 19z"/><path d="M9 12.5l2 2 4-4.5"/></svg>
+      Path
+    </button>
+    <button data-tab="cycle">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="4.5" r="1.4" fill="currentColor" stroke="none"/></svg>
+      Cycle
+    </button>
+    <button data-tab="subdivide">
+      <svg viewBox="0 0 24 24"><circle cx="4" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="20" cy="12" r="2"/></svg>
+      Subdivide
+    </button>
+    <button data-tab="bols">
+      <svg viewBox="0 0 24 24"><path d="M3 5h18v11H8l-5 4V5z"/></svg>
+      Bols
+    </button>
+    <button data-tab="learn">
+      <svg viewBox="0 0 24 24"><path d="M4 4h11a3 3 0 013 3v13H7a3 3 0 01-3-3V4z"/><path d="M18 4v13"/></svg>
+      Learn
+    </button>
+  </nav>
+
+</div>
+
+<script>
+(function(){
+"use strict";
+
+/* ============================================================
+   DATA
+   ============================================================ */
+
+function computeBeatMeta(tala){
+  const meta = [];
+  tala.vibhags.forEach((len, vi) => {
+    for (let k = 0; k < len; k++){
+      meta.push({ vibhagIndex: vi, isStart: k === 0, gesture: tala.gestures[vi] });
+    }
+  });
+  return meta;
+}
+
+function vibhagLabels(tala){
+  let taliCounter = 1;
+  return tala.gestures.map((g, i) => {
+    if (i === 0) return 'X';
+    if (g === 'wave') return '0';
+    taliCounter++;
+    return String(taliCounter);
+  });
+}
+
+const TALAS = [
+  { id:'teentaal', name:'Teentaal', trad:'H', matras:16, vibhags:[4,4,4,4], gestures:['clap','clap','wave','clap'],
+    syllables:['Dha','Dhin','Dhin','Dha','Dha','Dhin','Dhin','Dha','Dha','Tin','Tin','Ta','Ta','Dhin','Dhin','Dha'],
+    desc:'The default 16-beat cycle of Hindustani music — four even groups of four (4+4+4+4). Almost everything you hear in a khyal or a tabla solo is built on this frame.' },
+  { id:'jhaptaal', name:'Jhaptaal', trad:'H', matras:10, vibhags:[2,3,2,3], gestures:['clap','clap','wave','clap'],
+    syllables:['Dhi','Na','Dhi','Dhi','Na','Tin','Na','Dhi','Dhi','Na'],
+    desc:'10 beats grouped 2+3+2+3 — asymmetrical from the start. Feel the seams between groups rather than counting to ten.' },
+  { id:'ektaal', name:'Ektaal', trad:'H', matras:12, vibhags:[2,2,2,2,2,2], gestures:['clap','clap','wave','clap','wave','clap'],
+    syllables:['Dhin','Dhin','Dhage','Tiri','Tu','Na','Kat','Ta','Dhage','Tiri','Dhin','Na'],
+    desc:'12 beats in six pairs, alternating clap and wave (X 2 0 3 0 4). Traditionally played slow and weighty, then doubled up as tempo rises.' },
+  { id:'rupak_h', name:'Rupak Taal (Hindustani)', trad:'H', matras:7, vibhags:[3,2,2], gestures:['wave','clap','clap'],
+    syllables:['Tin','Tin','Na','Dhin','Na','Dhin','Na'],
+    desc:'7 beats grouped 3+2+2. Unusually, Sam itself is a khali — no clap on beat 1 — which gives Rupak its graceful, slightly off-kilter lift. A great one to steal for odd-meter jazz writing.' },
+  { id:'keherwa', name:'Keherwa', trad:'H', matras:8, vibhags:[4,4], gestures:['clap','clap'],
+    syllables:['Dha','Ge','Na','Ti','Na','Ka','Dhi','Na'],
+    desc:'8 beats in two even fours — the light, popular cycle under ghazals, bhajans, and film songs. The closest thing here to a straightforward 4/4 groove.' },
+  { id:'dadra', name:'Dadra', trad:'H', matras:6, vibhags:[3,3], gestures:['clap','clap'],
+    syllables:['Dha','Dhin','Na','Dha','Tin','Na'],
+    desc:'6 beats in two groups of three — a lilting, waltz-adjacent feel, common in light-classical and folk-influenced forms.' },
+  { id:'adi', name:'Adi Tala', trad:'C', matras:8, vibhags:[4,2,2], gestures:['clap','clap','clap'],
+    syllables:['1','2','3','4','1','2','1','2'],
+    desc:'The most common Carnatic cycle: one 4-count laghu plus two 2-count dhrutams (4+2+2=8). Carnatic tala is counted with claps and finger-counts rather than fixed spoken bols — numbers here show the count within each anga.' },
+  { id:'rupaka_c', name:'Rupaka Tala (Carnatic)', trad:'C', matras:6, vibhags:[2,4], gestures:['clap','clap'],
+    syllables:['1','2','1','2','3','4'],
+    desc:'A compact 6-count cycle: one dhrutam then one laghu (2+4). Very common in kritis at a brisk pace.' },
+  { id:'khanda_chapu', name:'Khanda Chapu', trad:'C', matras:5, vibhags:[2,3], gestures:['clap'],
+    syllables:['1','2','1','2','3'],
+    desc:'A 5-count cycle (2+3) with a distinctive lopsided pulse — a direct cousin of a 5/8 or 5/4 feel in jazz.' },
+  { id:'misra_chapu', name:'Misra Chapu', trad:'C', matras:7, vibhags:[3,4], gestures:['clap'],
+    syllables:['1','2','3','1','2','3','4'],
+    desc:'A 7-count cycle (3+4). If you want one single tool to bring straight into odd-meter jazz writing, practice this cycle until it feels as natural as 4/4.' },
+];
+
+const SYLLABLE_SETS = {
+  1:['Ta'],
+  2:['Ta','Ka'],
+  3:['Ta','Ki','Ta'],
+  4:['Ta','Ka','Di','Mi'],
+  5:['Ta','Ka','Ta','Ki','Ta'],
+  6:['Ta','Ki','Ta','Ta','Ki','Ta'],
+  7:['Ta','Ki','Ta','Ta','Ka','Di','Mi'],
+  8:['Ta','Ka','Di','Mi','Ta','Ka','Di','Mi'],
+  9:['Ta','Ki','Ta','Ta','Ki','Ta','Ta','Ki','Ta']
+};
+const GATI_NAME = {1:'Base pulse',2:'Duple (dugun / chatusra-ish)',3:'Tisra gati (triplet feel)',4:'Chatusra gati (chaugun)',5:'Khanda gati',6:'Tisra ×2',7:'Misra gati',8:'Chatusra ×2',9:'Sankeerna gati'};
+
+const BOL_PALETTE = [
+  { s:'Dha', trad:'H', tone:'low' }, { s:'Dhin', trad:'H', tone:'low' }, { s:'Ge', trad:'H', tone:'low' },
+  { s:'Ta', trad:'H', tone:'high' }, { s:'Tin', trad:'H', tone:'high' }, { s:'Ka', trad:'H', tone:'high' },
+  { s:'Na', trad:'H', tone:'mid' }, { s:'Kat', trad:'H', tone:'high' },
+  { s:'Ta·', trad:'C', tone:'high' }, { s:'Ki', trad:'C', tone:'high' }, { s:'Di', trad:'C', tone:'mid' }, { s:'Mi', trad:'C', tone:'mid' },
+  { s:'·', trad:'N', tone:'rest' },
+];
+
+const PRESETS = [
+  { name:'Teentaal', beats:16, pattern:['Dha','Dhin','Dhin','Dha','Dha','Dhin','Dhin','Dha','Dha','Ta','Ta','Ta','Ta','Dhin','Dhin','Dha'] },
+  { name:'Ektaal', beats:12, pattern:['Dhin','Dhin','Ge','Ki','Ta','Na','Kat','Ta','Ge','Ki','Dhin','Na'] },
+  { name:'Rupak', beats:7, pattern:['Tin','Tin','Na','Dhin','Na','Dhin','Na'] },
+  { name:'Tisra (3)', beats:6, pattern:['Ta·','Ki','Ta','Ta·','Ki','Ta'] },
+  { name:'Chatusra (4)', beats:8, pattern:['Ta·','Ka','Di','Mi','Ta·','Ka','Di','Mi'] },
+  { name:'Misra (7)', beats:7, pattern:['Ta·','Ki','Ta','Ta·','Ka','Di','Mi'] },
+];
+
+const CONCEPTS = [
+  { term:'Laya', cat:'Foundations', trad:'N', def:'The overall tempo grade of a performance: vilambit (slow, spacious), madhya (medium), and drut (fast). It is not just "how fast" — at slow laya you hear each subdivision as its own event; at fast laya, groups blur into a single gesture.', why:'Practicing one phrase across all three laya is how you learn to feel a lick as both "the beat" and "the subdivision" — the same instinct behind jazz double-time and half-time feels.' },
+  { term:'Matra', cat:'Foundations', trad:'N', def:'The basic beat, or count-unit, of a tala. One tick of the cycle.' },
+  { term:'Avartan', cat:'Foundations', trad:'N', def:'One full turn of the cycle, from Sam back to Sam. Indian meter is not a bar that resets — it is a wheel that returns to the same point.' },
+  { term:'Sam', cat:'Foundations', trad:'N', def:'Beat 1 — the point of maximum resolution, where soloist and accompanist land together.', why:'Sam is the "one" a jazz musician already feels at the top of a chorus. Indian musicians build entire improvised phrases (tihais) engineered to land there with a satisfying click — the same timing instinct as resolving a lick onto beat 1 of the next chorus.' },
+  { term:'Tali', cat:'Foundations', trad:'H', def:'A clap, marking a strong subdivision of the cycle other than Sam.' },
+  { term:'Khali', cat:'Foundations', trad:'H', def:'A wave of the hand instead of a clap — marking a deliberately "empty," unstressed section. There is no direct Carnatic equivalent; Carnatic tala-keeping uses claps and finger-counts throughout.' },
+  { term:'Vibhag / Anga', cat:'Structure', trad:'N', def:'A vibhag (Hindustani) or anga (Carnatic) is one grouping within the cycle. Talas are additive: 16 isn\u2019t just "16," it\u2019s 4+4+4+4 (Teentaal); 7 is 3+4 (Rupak or Misra Chapu).', why:'Hearing the seams between groups — not just counting to N — is the actual skill, and it is exactly the skill odd-meter jazz playing demands.' },
+  { term:'Tala', cat:'Structure', trad:'N', def:'A named, repeating rhythmic cycle with a fixed number of matras, grouped into vibhags/angas, that everyone in an ensemble tracks together.' },
+  { term:'Jaati', cat:'Structure', trad:'C', def:'In Carnatic music, the count-length of a laghu: tisra (3), chatusra (4), khanda (5), misra (7), sankeerna (9).', why:'The same tala "shape" can be stretched or compressed by changing jaati — a direct analog to reharmonizing a progression at a different rhythmic density.' },
+  { term:'Nadai / Gati', cat:'Structure', trad:'C', def:'The subdivision feel underneath the main pulse — duple, triple, quintuple and so on, layered under a steady beat.', why:'This is your ticket into odd-feel swing and convincingly playing "3 over 4." Practice it in the Subdivide tab.' },
+  { term:'Layakari', cat:'Structure', trad:'H', def:'Deliberately playing a phrase at a rhythmic multiple of the base pulse — double time (dugun), triple (tigun), quadruple (chaugun) — while the underlying cycle stays put.', why:'This is precisely the technique jazz musicians call "implying" double or triple time over a fixed tempo.' },
+  { term:'Additive rhythm', cat:'Structure', trad:'N', def:'Grouping beats in uneven clusters — 3+2+2 rather than a uniform four — instead of pure even subdivision.', why:'The core building block for any odd-meter composition: 7 as 3+4, 5 as 2+3, 9 as 2+2+2+3, and so on.' },
+  { term:'Bol', cat:'Vocabulary', trad:'H', def:'A spoken mnemonic syllable representing a specific drum stroke — Dha, Tin, Ka, Ge. The spoken language is the notation itself.' },
+  { term:'Theka', cat:'Vocabulary', trad:'H', def:'The fixed, characteristic sequence of bols that defines a given tala — its signature groove, the pattern a tabla player returns to as home base.' },
+  { term:'Solkattu / Konnakol', cat:'Vocabulary', trad:'C', def:'The Carnatic art of vocalizing rhythm with syllables like Ta Ka Di Mi, recited at speed as its own virtuosic practice — and used to compose and teach phrases before ever touching a drum.', why:'Reciting a phrase before playing it is a genuinely transferable practice habit for any instrumentalist working on odd-meter vocabulary.' },
+  { term:'Kaida', cat:'Vocabulary', trad:'H', def:'A Hindustani theme-and-variations form: a short theme built strictly from its own bol vocabulary, developed through set variation techniques, and always resolved with a tihai.' },
+  { term:'Tukra / Mohra', cat:'Vocabulary', trad:'H', def:'A tukra is a short, flashy composed phrase; a mohra is a specific transitional phrase used to punctuate a passage or lead back to Sam.' },
+  { term:'Tihai', cat:'Vocabulary', trad:'H', def:'A phrase repeated exactly three times, calculated so the third repetition lands precisely on Sam.', why:'Maybe the single most jazz-relevant concept here — a written-out example of resolving a phrase of arbitrary length onto beat 1, exactly the math a bebop player does instinctively when timing a lick to land on the downbeat. Try the Tihai builder in the Bols tab.' },
+  { term:'Korvai / Mora', cat:'Vocabulary', trad:'C', def:'The Carnatic equivalent of a tihai family: a korvai is a composed, three-times-repeated cadential phrase (often built from multiple smaller phrases); a mora is a shorter version of the same idea.' },
+  { term:'Chakradar', cat:'Vocabulary', trad:'H', def:'A "tihai of tihais" — the entire phrase, itself ending in a tihai, is repeated three times before the final Sam. The same resolving idea applied one level up, fractally.' },
+];
+
+/* ============================================================
+   AUDIO ENGINE
+   ============================================================ */
+
+let audioCtx = null;
+function ensureCtx(){
+  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  if (audioCtx.state === 'suspended') audioCtx.resume();
+  return audioCtx;
+}
+
+function playBell(t){
+  const ctx = audioCtx;
+  const o1 = ctx.createOscillator(), o2 = ctx.createOscillator();
+  o1.type = 'sine'; o1.frequency.value = 880;
+  o2.type = 'sine'; o2.frequency.value = 880 * 2.4;
+  const g = ctx.createGain();
+  g.gain.setValueAtTime(0.0001, t);
+  g.gain.exponentialRampToValueAtTime(0.55, t + 0.006);
+  g.gain.exponentialRampToValueAtTime(0.0001, t + 0.85);
+  o1.connect(g); o2.connect(g); g.connect(ctx.destination);
+  o1.start(t); o2.start(t); o1.stop(t + 0.9); o2.stop(t + 0.9);
+}
+function playClap(t, vol){
+  const ctx = audioCtx;
+  const size = Math.floor(ctx.sampleRate * 0.05);
+  const buffer = ctx.createBuffer(1, size, ctx.sampleRate);
+  const data = buffer.getChannelData(0);
+  for (let i = 0; i < size; i++) data[i] = Math.random() * 2 - 1;
+  const noise = ctx.createBufferSource(); noise.buffer = buffer;
+  const bp = ctx.createBiquadFilter(); bp.type = 'bandpass'; bp.frequency.value = 1600; bp.Q = 0.8;
+  const g = ctx.createGain();
+  g.gain.setValueAtTime(vol || 0.7, t);
+  g.gain.exponentialRampToValueAtTime(0.001, t + 0.11);
+  noise.connect(bp); bp.connect(g); g.connect(ctx.destination);
+  noise.start(t); noise.stop(t + 0.12);
+}
+function playThud(t, vol){
+  const ctx = audioCtx;
+  const o = ctx.createOscillator(); o.type = 'sine';
+  o.frequency.setValueAtTime(170, t);
+  o.frequency.exponentialRampToValueAtTime(85, t + 0.16);
+  const g = ctx.createGain();
+  g.gain.setValueAtTime(vol || 0.4, t);
+  g.gain.exponentialRampToValueAtTime(0.001, t + 0.2);
+  o.connect(g); g.connect(ctx.destination);
+  o.start(t); o.stop(t + 0.22);
+}
+function playTick(t, freq, vol, dur){
+  const ctx = audioCtx;
+  const o = ctx.createOscillator(); o.type = 'square';
+  o.frequency.value = freq || 1100;
+  const g = ctx.createGain();
+  g.gain.setValueAtTime(vol || 0.18, t);
+  g.gain.exponentialRampToValueAtTime(0.001, t + (dur || 0.045));
+  o.connect(g); g.connect(ctx.destination);
+  o.start(t); o.stop(t + (dur || 0.05));
+}
+function playBolTone(t, tone){
+  if (tone === 'low') playThud(t, 0.5);
+  else if (tone === 'high') playTick(t, 1500, 0.35, 0.06);
+  else if (tone === 'mid') playTick(t, 750, 0.28, 0.07);
+  else return; // rest
+}
+
+/* Precise scheduling clock (lookahead pattern) */
+function createClock(getStepSeconds, onStep){
+  let nextTime = 0, step = 0, timerId = null, playing = false;
+  const lookaheadMs = 25, scheduleAhead = 0.12;
+  function tick(){
+    if (!playing) return;
+    const ctx = audioCtx;
+    while (playing && nextTime < ctx.currentTime + scheduleAhead){
+      onStep(step, nextTime);
+      nextTime += getStepSeconds();
+      step++;
+    }
+    if (playing) timerId = setTimeout(tick, lookaheadMs);
+  }
+  return {
+    start(){
+      if (playing) return;
+      ensureCtx();
+      playing = true; step = 0;
+      nextTime = audioCtx.currentTime + 0.08;
+      tick();
+    },
+    stop(){ playing = false; clearTimeout(timerId); },
+    isPlaying(){ return playing; }
+  };
+}
+
+/* ============================================================
+   TAB SWITCHING
+   ============================================================ */
+const tabs = ['path','cycle','subdivide','bols','learn'];
+function stopAllClocks(){
+  cycleClock.stop(); subClock.stop(); bolClock.stop(); tihaiClock && tihaiClock.stop();
+  polyClock && polyClock.stop();
+  setCyclePlayingUI(false); setSubPlayingUI(false); setBolPlayingUI(false); setTihaiPlayingUI(false);
+  setPolyPlayingUI && setPolyPlayingUI(false);
+}
+function switchTab(name){
+  stopAllClocks();
+  tabs.forEach(t => {
+    document.getElementById('tab-' + t).classList.toggle('active', t === name);
+  });
+  document.querySelectorAll('#tabbar button').forEach(b => b.classList.toggle('active', b.dataset.tab === name));
+  if (name === 'path' && typeof renderPath === 'function') renderPath();
+}
+document.getElementById('tabbar').addEventListener('click', (e) => {
+  const btn = e.target.closest('button[data-tab]');
+  if (!btn) return;
+  switchTab(btn.dataset.tab);
+  exitLesson(); // manual nav cancels any active lesson banner
+});
+
+/* ============================================================
+   CYCLE TAB
+   ============================================================ */
+let currentTala = TALAS[0];
+let cycleBpm = 80;
+
+const talaSelect = document.getElementById('talaSelect');
+TALAS.forEach(t => {
+  const opt = document.createElement('option');
+  opt.value = t.id; opt.textContent = (t.trad === 'H' ? '⬤ ' : '◆ ') + t.name + ' — ' + t.matras;
+  talaSelect.appendChild(opt);
+});
+const customOpt = document.createElement('option');
+customOpt.value = 'custom'; customOpt.textContent = '✦ Custom grouping…';
+talaSelect.appendChild(customOpt);
+
+function getCustomTala(){
+  const raw = document.getElementById('customPattern').value.trim();
+  const parts = raw.split('+').map(s => parseInt(s.trim(), 10)).filter(n => n > 0);
+  if (parts.length === 0) parts.push(4);
+  const gestures = parts.map((_, i) => i === 0 ? 'clap' : 'clap');
+  return {
+    id:'custom', name:'Custom', trad:'N', matras: parts.reduce((a,b)=>a+b,0),
+    vibhags: parts, gestures,
+    syllables: null,
+    desc:'Your own additive grouping (' + parts.join('+') + ') — a direct sandbox for odd-meter feels like 7=3+4, 5=2+3, or 9=2+2+2+3.'
+  };
+}
+
+function selectTala(id){
+  if (id === 'custom'){
+    document.getElementById('customPatternWrap').style.display = 'block';
+    currentTala = getCustomTala();
+  } else {
+    document.getElementById('customPatternWrap').style.display = 'none';
+    currentTala = TALAS.find(t => t.id === id) || TALAS[0];
+  }
+  document.getElementById('talaDesc').innerHTML =
+    '<span class="tag ' + currentTala.trad + '">' + (currentTala.trad==='H'?'Hindustani':currentTala.trad==='C'?'Carnatic':'Neutral') + '</span> &nbsp;' + currentTala.desc;
+  renderWheel(currentTala);
+  renderBolLine(currentTala);
+}
+talaSelect.addEventListener('change', () => selectTala(talaSelect.value));
+document.getElementById('customPattern').addEventListener('input', () => {
+  if (talaSelect.value === 'custom'){ currentTala = getCustomTala(); selectTala('custom'); }
+});
+
+const wheelSvg = document.getElementById('wheel');
+const NS = 'http://www.w3.org/2000/svg';
+function svgEl(tag, attrs){
+  const el = document.createElementNS(NS, tag);
+  for (const k in attrs) el.setAttribute(k, attrs[k]);
+  return el;
+}
+function markerColor(isSam, gesture){
+  if (isSam) return '#e8a33d';
+  return gesture === 'wave' ? '#6b6486' : '#7fc7c2';
+}
+
+function renderWheel(tala){
+  wheelSvg.innerHTML = '';
+  const meta = computeBeatMeta(tala);
+  const n = meta.length;
+  const cx = 150, cy = 150, R = 108;
+  const bigGap = 0.045, smallGap = 0.010;
+  const boundarySet = new Set([0]);
+  let s = 0;
+  tala.vibhags.forEach(len => { s += len; boundarySet.add(s % n); });
+
+  for (let i = 0; i < n; i++){
+    const a0 = (i / n) * Math.PI * 2 - Math.PI / 2;
+    const a1 = ((i + 1) / n) * Math.PI * 2 - Math.PI / 2;
+    const leftPad = boundarySet.has(i) ? bigGap : smallGap;
+    const rightPad = boundarySet.has((i + 1) % n) ? bigGap : smallGap;
+    const start = a0 + leftPad, end = a1 - rightPad;
+    const x1 = cx + R * Math.cos(start), y1 = cy + R * Math.sin(start);
+    const x2 = cx + R * Math.cos(end), y2 = cy + R * Math.sin(end);
+    const large = (end - start) > Math.PI ? 1 : 0;
+    const path = svgEl('path', {
+      d: 'M ' + x1.toFixed(2) + ' ' + y1.toFixed(2) + ' A ' + R + ' ' + R + ' 0 ' + large + ' 1 ' + x2.toFixed(2) + ' ' + y2.toFixed(2),
+      stroke: markerColor(meta[i].isStart && i === 0, meta[i].gesture),
+      'stroke-width': 10, fill: 'none', 'stroke-linecap':'round',
+      opacity: meta[i].isStart ? 1 : 0.32
+    });
+    wheelSvg.appendChild(path);
+
+    const midA = (start + end) / 2;
+    const dotR = meta[i].isStart ? 8 : 5;
+    const dx = cx + R * Math.cos(midA), dy = cy + R * Math.sin(midA);
+    const dot = svgEl('circle', {
+      cx: dx, cy: dy, r: dotR,
+      fill: markerColor(i === 0, meta[i].gesture),
+      class: 'beat-dot', id: 'beatdot-' + i,
+      style: 'color:' + markerColor(i === 0, meta[i].gesture)
+    });
+    wheelSvg.appendChild(dot);
+
+    if (meta[i].isStart){
+      const lx = cx + (R + 22) * Math.cos(midA), ly = cy + (R + 22) * Math.sin(midA);
+      const label = i === 0 ? '🔔' : (meta[i].gesture === 'wave' ? '🌊' : '👏');
+      const txt = svgEl('text', { x: lx, y: ly + 4, 'text-anchor':'middle', 'font-size':13 });
+      txt.textContent = label;
+      wheelSvg.appendChild(txt);
+    }
+  }
+  const centerNum = svgEl('text', { x: cx, y: cy - 2, 'text-anchor':'middle', class:'wheel-center-count', 'font-size':34, id:'wheelCenterCount' });
+  centerNum.textContent = '1';
+  wheelSvg.appendChild(centerNum);
+  const centerLabel = svgEl('text', { x: cx, y: cy + 20, 'text-anchor':'middle', class:'wheel-center-label' });
+  centerLabel.textContent = tala.name + ' · ' + n;
+  wheelSvg.appendChild(centerLabel);
+}
+
+let lastActiveDot = null;
+function highlightWheelBeat(i){
+  if (lastActiveDot) lastActiveDot.classList.remove('active');
+  const dot = document.getElementById('beatdot-' + i);
+  if (dot){ dot.classList.add('active'); lastActiveDot = dot; }
+  const cn = document.getElementById('wheelCenterCount');
+  if (cn) cn.textContent = String(i + 1);
+}
+
+function renderBolLine(tala){
+  const wrap = document.getElementById('bolLine');
+  wrap.innerHTML = '';
+  const meta = computeBeatMeta(tala);
+  const labels = vibhagLabels(tala);
+  let idx = 0;
+  tala.vibhags.forEach((len, vi) => {
+    const grp = document.createElement('div'); grp.className = 'grp';
+    const lbl = document.createElement('span'); lbl.className = 'lbl'; lbl.textContent = labels[vi];
+    grp.appendChild(lbl);
+    for (let k = 0; k < len; k++){
+      const tok = document.createElement('span'); tok.className = 'tok'; tok.id = 'boltok-' + idx;
+      tok.textContent = tala.syllables ? tala.syllables[idx] : String(idx + 1);
+      grp.appendChild(tok);
+      idx++;
+    }
+    wrap.appendChild(grp);
+  });
+}
+let lastActiveTok = null;
+function highlightBolTok(i){
+  if (lastActiveTok) lastActiveTok.classList.remove('on');
+  const tok = document.getElementById('boltok-' + i);
+  if (tok){ tok.classList.add('on'); lastActiveTok = tok; }
+}
+
+function scheduleCycleSound(idx, time, meta){
+  const m = meta[idx];
+  if (idx === 0) playBell(time);
+  else if (m.isStart) { if (m.gesture === 'wave') playThud(time, 0.35); else playClap(time, 0.6); }
+  else playTick(time, 900, 0.10, 0.04);
+}
+
+const cycleClock = createClock(
+  () => 60 / cycleBpm,
+  (step, time) => {
+    const meta = computeBeatMeta(currentTala);
+    const idx = step % meta.length;
+    scheduleCycleSound(idx, time, meta);
+    const delay = Math.max(0, (time - audioCtx.currentTime) * 1000);
+    setTimeout(() => { highlightWheelBeat(idx); highlightBolTok(idx); }, delay);
+  }
+);
+function setCyclePlayingUI(playing){
+  const btn = document.getElementById('cyclePlayBtn');
+  btn.textContent = playing ? '⏸ Stop' : '▶ Play';
+  btn.classList.toggle('playing', playing);
+}
+document.getElementById('cyclePlayBtn').addEventListener('click', () => {
+  if (cycleClock.isPlaying()){ stopAllClocks(); }
+  else { stopAllClocks(); cycleClock.start(); setCyclePlayingUI(true); }
+});
+document.getElementById('cycleBpmSlider').addEventListener('input', (e) => {
+  cycleBpm = parseInt(e.target.value, 10);
+  document.getElementById('cycleBpmReadout').textContent = cycleBpm;
+});
+makeTapTempo('cycleTapBtn', (bpm) => {
+  cycleBpm = bpm;
+  document.getElementById('cycleBpmSlider').value = bpm;
+  document.getElementById('cycleBpmReadout').textContent = bpm;
+});
+
+function makeTapTempo(btnId, onBpm){
+  let taps = [];
+  document.getElementById(btnId).addEventListener('click', () => {
+    ensureCtx();
+    const now = performance.now();
+    taps.push(now);
+    taps = taps.filter(t => now - t < 3000);
+    if (taps.length > 6) taps = taps.slice(-6);
+    if (taps.length >= 2){
+      const intervals = [];
+      for (let i = 1; i < taps.length; i++) intervals.push(taps[i] - taps[i-1]);
+      const avg = intervals.reduce((a,b)=>a+b,0) / intervals.length;
+      const bpm = Math.round(Math.min(220, Math.max(30, 60000 / avg)));
+      onBpm(bpm);
+    }
+  });
+}
+
+selectTala(TALAS[0].id);
+
+/* ============================================================
+   SUBDIVIDE TAB
+   ============================================================ */
+let subN = 4;
+let subBpm = 70;
+const nPicker = document.getElementById('nPicker');
+[1,2,3,4,5,6,7,8,9].forEach(n => {
+  const chip = document.createElement('button');
+  chip.className = 'chip' + (n === subN ? ' active' : '');
+  chip.textContent = n;
+  chip.dataset.n = n;
+  chip.addEventListener('click', () => {
+    subN = n;
+    document.querySelectorAll('#nPicker .chip').forEach(c => c.classList.toggle('active', c === chip));
+    renderPulseTrack();
+  });
+  nPicker.appendChild(chip);
+});
+
+function renderPulseTrack(){
+  const track = document.getElementById('pulseTrack');
+  track.innerHTML = '';
+  for (let g = 0; g < 2; g++){
+    for (let i = 0; i < subN; i++){
+      const dot = document.createElement('div');
+      dot.className = 'pulse-dot' + (i === 0 ? ' main' : '');
+      dot.id = 'pulse-' + g + '-' + i;
+      track.appendChild(dot);
+    }
+  }
+  document.getElementById('subMeta').textContent = GATI_NAME[subN] + ' — ' + subN + ' pulses per beat.';
+  document.getElementById('syllableReadout').textContent = (SYLLABLE_SETS[subN] || [])[0] || '';
+}
+renderPulseTrack();
+
+let lastPulseEls = [];
+function highlightPulse(stepIdx){
+  lastPulseEls.forEach(el => el.classList.remove('active'));
+  lastPulseEls = [];
+  const within = stepIdx % subN;
+  [0,1].forEach(g => {
+    const el = document.getElementById('pulse-' + g + '-' + within);
+    if (el){ el.classList.add('active'); lastPulseEls.push(el); }
+  });
+  const syl = SYLLABLE_SETS[subN];
+  document.getElementById('syllableReadout').textContent = syl ? syl[within] : (within + 1);
+}
+
+const subClock = createClock(
+  () => (60 / subBpm) / subN,
+  (step, time) => {
+    const within = step % subN;
+    if (within === 0) playTick(time, 1000, 0.4, 0.07); else playTick(time, 550, 0.18, 0.05);
+    const delay = Math.max(0, (time - audioCtx.currentTime) * 1000);
+    setTimeout(() => highlightPulse(step), delay);
+  }
+);
+function setSubPlayingUI(playing){
+  const btn = document.getElementById('subPlayBtn');
+  btn.textContent = playing ? '⏸ Stop' : '▶ Play';
+  btn.classList.toggle('playing', playing);
+}
+document.getElementById('subPlayBtn').addEventListener('click', () => {
+  if (subClock.isPlaying()){ stopAllClocks(); }
+  else { stopAllClocks(); subClock.start(); setSubPlayingUI(true); }
+});
+document.getElementById('subBpmSlider').addEventListener('input', (e) => {
+  subBpm = parseInt(e.target.value, 10);
+  document.getElementById('subBpmReadout').textContent = subBpm;
+});
+makeTapTempo('subTapBtn', (bpm) => {
+  subBpm = bpm;
+  document.getElementById('subBpmSlider').value = bpm;
+  document.getElementById('subBpmReadout').textContent = bpm;
+});
+
+/* ---- Single / Polyrhythm sub-mode toggle ---- */
+function setSubdivideMode(mode){
+  const single = mode === 'single';
+  document.getElementById('subSinglePanel').style.display = single ? '' : 'none';
+  document.getElementById('subPolyPanel').style.display = single ? 'none' : '';
+  document.getElementById('subModeSingleBtn').classList.toggle('active', single);
+  document.getElementById('subModePolyBtn').classList.toggle('active', !single);
+  if (!subClock.isPlaying() && !(polyClock && polyClock.isPlaying())) return;
+  stopAllClocks();
+}
+document.getElementById('subModeSingleBtn').addEventListener('click', () => setSubdivideMode('single'));
+document.getElementById('subModePolyBtn').addEventListener('click', () => setSubdivideMode('poly'));
+
+/* ============================================================
+   POLYRHYTHM  (A "over" B — e.g. 5 over 4, 11 over 3)
+   ============================================================ */
+const POLY_PRESETS = [
+  { a:3, b:2, note:'The gateway polyrhythm — a triplet feel layered over a duple pulse.' },
+  { a:2, b:3, note:'The same relationship flipped — now the triplet is your reference.' },
+  { a:4, b:3, note:'Four evenly against three — a staple of modern-jazz rhythmic displacement.' },
+  { a:5, b:4, note:'A classic cross-rhythm — quintuplets across a bar of four.' },
+  { a:5, b:3, note:'Five against a triplet-felt three — wide and tumbling.' },
+  { a:7, b:4, note:'Septuplets across four — a serious ear-training benchmark.' },
+  { a:7, b:3, note:'Seven against three — intense, fast-realigning.' },
+  { a:11, b:3, note:'A wide, wandering ratio that only realigns once per full cycle. Practice slow.' },
+  { a:11, b:4, note:'Advanced — an odd, exploratory ratio favored in free/modern playing.' },
+];
+function gcd(x, y){ return y ? gcd(y, x % y) : x; }
+function lcm(x, y){ return Math.abs(x * y) / gcd(x, y); }
+
+let polyA = 3, polyB = 2, polyBpm = 76;
+
+const polyPresetRow = document.getElementById('polyPresetRow');
+POLY_PRESETS.forEach(p => {
+  const chip = document.createElement('button');
+  chip.className = 'chip small';
+  chip.textContent = p.a + ':' + p.b;
+  chip.dataset.a = p.a; chip.dataset.b = p.b;
+  chip.addEventListener('click', () => applyPolyConfig(p.a, p.b));
+  polyPresetRow.appendChild(chip);
+});
+
+function applyPolyConfig(a, b){
+  polyA = Math.max(2, Math.min(16, a));
+  polyB = Math.max(2, Math.min(16, b));
+  document.getElementById('polyA').value = polyA;
+  document.getElementById('polyB').value = polyB;
+  renderPolyTracks();
+  syncPolyPresetHighlight();
+}
+function syncPolyPresetHighlight(){
+  document.querySelectorAll('#polyPresetRow .chip').forEach(c => {
+    c.classList.toggle('active', parseInt(c.dataset.a,10) === polyA && parseInt(c.dataset.b,10) === polyB);
+  });
+}
+document.getElementById('polyA').addEventListener('input', (e) => {
+  polyA = Math.max(2, Math.min(16, parseInt(e.target.value, 10) || 2));
+  renderPolyTracks(); syncPolyPresetHighlight();
+});
+document.getElementById('polyB').addEventListener('input', (e) => {
+  polyB = Math.max(2, Math.min(16, parseInt(e.target.value, 10) || 2));
+  renderPolyTracks(); syncPolyPresetHighlight();
+});
+
+function renderPolyTracks(){
+  const trackA = document.getElementById('polyTrackA');
+  const trackB = document.getElementById('polyTrackB');
+  trackA.innerHTML = ''; trackB.innerHTML = '';
+  for (let i = 0; i < polyA; i++){
+    const d = document.createElement('div'); d.className = 'poly-dot a'; d.id = 'polyA-' + i;
+    trackA.appendChild(d);
+  }
+  for (let i = 0; i < polyB; i++){
+    const d = document.createElement('div'); d.className = 'poly-dot b'; d.id = 'polyB-' + i;
+    trackB.appendChild(d);
+  }
+  document.getElementById('polyLabelA').textContent = polyA + ' (marigold)';
+  document.getElementById('polyLabelB').textContent = polyB + ' (teal)';
+  const preset = POLY_PRESETS.find(p => p.a === polyA && p.b === polyB);
+  document.getElementById('polyNote').innerHTML =
+    '<span class="tag N">' + polyA + ' : ' + polyB + '</span>&nbsp; ' +
+    (preset ? preset.note : 'A custom ratio — ' + polyA + ' evenly-spaced pulses against ' + polyB + '.');
+}
+renderPolyTracks();
+syncPolyPresetHighlight();
+
+function flashPolyDot(prefix, i){
+  const el = document.getElementById(prefix + '-' + i);
+  if (!el) return;
+  el.classList.add('active');
+  setTimeout(() => el.classList.remove('active'), 140);
+}
+
+let polyResolution = lcm(polyA, polyB);
+const polyClock = createClock(
+  () => {
+    // one shared cycle T (seconds) = polyB reference beats at polyBpm; step = T / LCM
+    const T = polyB * (60 / polyBpm);
+    return T / polyResolution;
+  },
+  (step, time) => {
+    const idx = step % polyResolution;
+    if (idx === 0){
+      polyResolution = lcm(polyA, polyB); // re-derive at cycle boundary in case A/B changed
+      const bar = document.getElementById('polyCycleFill');
+      bar.style.transition = 'none'; bar.style.width = '0%';
+      void bar.offsetWidth;
+      const T = polyB * (60 / polyBpm);
+      bar.style.transition = 'width ' + T + 's linear';
+      bar.style.width = '100%';
+    }
+    const stepA = polyResolution / polyA, stepB = polyResolution / polyB;
+    const isA = idx % stepA === 0;
+    const isB = idx % stepB === 0;
+    const delay = Math.max(0, (time - audioCtx.currentTime) * 1000);
+    if (isA && isB){ playBell(time); }
+    else if (isA){ playTick(time, 1500, 0.4, 0.06); }
+    else if (isB){ playTick(time, 500, 0.32, 0.08); }
+    if (isA) setTimeout(() => flashPolyDot('polyA', Math.round(idx / stepA)), delay);
+    if (isB) setTimeout(() => flashPolyDot('polyB', Math.round(idx / stepB)), delay);
+  }
+);
+function setPolyPlayingUI(playing){
+  const btn = document.getElementById('polyPlayBtn');
+  btn.textContent = playing ? '⏸ Stop' : '▶ Play';
+  btn.classList.toggle('playing', playing);
+}
+document.getElementById('polyPlayBtn').addEventListener('click', () => {
+  if (polyClock.isPlaying()){ stopAllClocks(); }
+  else {
+    stopAllClocks();
+    polyResolution = lcm(polyA, polyB);
+    polyClock.start();
+    setPolyPlayingUI(true);
+  }
+});
+document.getElementById('polyBpmSlider').addEventListener('input', (e) => {
+  polyBpm = parseInt(e.target.value, 10);
+  document.getElementById('polyBpmReadout').textContent = polyBpm;
+});
+makeTapTempo('polyTapBtn', (bpm) => {
+  polyBpm = bpm;
+  document.getElementById('polyBpmSlider').value = bpm;
+  document.getElementById('polyBpmReadout').textContent = bpm;
+});
+
+/* ============================================================
+   BOLS TAB — sequencer
+   ============================================================ */
+let cellCount = 16;
+let pattern = new Array(cellCount).fill(null);
+let selectedPalIdx = 0;
+let bolBpm = 90;
+
+const palette = document.getElementById('palette');
+function renderPalette(){
+  palette.innerHTML = '';
+  BOL_PALETTE.forEach((b, i) => {
+    const chip = document.createElement('button');
+    chip.className = 'pal-chip' + (i === selectedPalIdx ? ' selected' : '');
+    chip.textContent = b.s;
+    chip.style.background = b.trad === 'H' ? 'var(--marigold-soft)' : b.trad === 'C' ? 'var(--teal-soft)' : 'var(--surface2)';
+    chip.style.color = b.trad === 'H' ? 'var(--marigold)' : b.trad === 'C' ? 'var(--teal)' : 'var(--muted)';
+    chip.addEventListener('click', () => {
+      selectedPalIdx = i;
+      renderPalette();
+    });
+    palette.appendChild(chip);
+  });
+}
+renderPalette();
+
+function renderGrid(){
+  const grid = document.getElementById('gridCells');
+  grid.innerHTML = '';
+  for (let i = 0; i < cellCount; i++){
+    const cell = document.createElement('div');
+    cell.className = 'cell'; cell.id = 'cell-' + i;
+    const idxLbl = document.createElement('span'); idxLbl.className = 'idx'; idxLbl.textContent = i + 1;
+    cell.appendChild(idxLbl);
+    const txt = document.createElement('span'); txt.textContent = pattern[i] ? pattern[i].s : '';
+    cell.appendChild(txt);
+    if (pattern[i]){
+      cell.style.background = pattern[i].trad === 'H' ? 'var(--marigold-soft)' : pattern[i].trad === 'C' ? 'var(--teal-soft)' : 'var(--surface2)';
+    }
+    cell.addEventListener('click', () => {
+      pattern[i] = BOL_PALETTE[selectedPalIdx].s === '·' ? null : BOL_PALETTE[selectedPalIdx];
+      renderGrid();
+    });
+    grid.appendChild(cell);
+  }
+  document.getElementById('stepCount').textContent = cellCount;
+}
+renderGrid();
+
+document.getElementById('stepMinus').addEventListener('click', () => {
+  if (cellCount > 2){ cellCount--; pattern = pattern.slice(0, cellCount); renderGrid(); }
+});
+document.getElementById('stepPlus').addEventListener('click', () => {
+  if (cellCount < 32){ cellCount++; pattern.push(null); renderGrid(); }
+});
+document.getElementById('bolClearBtn').addEventListener('click', () => {
+  pattern = new Array(cellCount).fill(null); renderGrid();
+});
+
+function loadBolPreset(p){
+  cellCount = p.beats;
+  pattern = p.pattern.map(s => BOL_PALETTE.find(b => b.s === s) || { s, trad:'N', tone:'mid' });
+  renderGrid();
+}
+const presetRow = document.getElementById('presetRow');
+PRESETS.forEach(p => {
+  const chip = document.createElement('button');
+  chip.className = 'chip small';
+  chip.textContent = p.name;
+  chip.addEventListener('click', () => loadBolPreset(p));
+  presetRow.appendChild(chip);
+});
+
+let lastBolCell = null;
+function highlightBolCell(i){
+  if (lastBolCell) lastBolCell.classList.remove('playing');
+  const cell = document.getElementById('cell-' + i);
+  if (cell){ cell.classList.add('playing'); lastBolCell = cell; }
+}
+const bolClock = createClock(
+  () => 60 / bolBpm,
+  (step, time) => {
+    const idx = step % cellCount;
+    const b = pattern[idx];
+    if (b) playBolTone(time, b.tone); else playTick(time, 700, 0.05, 0.03);
+    const delay = Math.max(0, (time - audioCtx.currentTime) * 1000);
+    setTimeout(() => highlightBolCell(idx), delay);
+  }
+);
+function setBolPlayingUI(playing){
+  const btn = document.getElementById('bolPlayBtn');
+  btn.textContent = playing ? '⏸ Stop' : '▶ Play';
+  btn.classList.toggle('playing', playing);
+}
+document.getElementById('bolPlayBtn').addEventListener('click', () => {
+  if (bolClock.isPlaying()){ stopAllClocks(); }
+  else { stopAllClocks(); bolClock.start(); setBolPlayingUI(true); }
+});
+document.getElementById('bolBpmSlider').addEventListener('input', (e) => {
+  bolBpm = parseInt(e.target.value, 10);
+  document.getElementById('bolBpmReadout').textContent = bolBpm;
+});
+
+/* ============================================================
+   TIHAI BUILDER
+   ============================================================ */
+const tihaiTalaSelect = document.getElementById('tihaiTala');
+TALAS.forEach(t => {
+  const opt = document.createElement('option');
+  opt.value = t.id; opt.textContent = t.name + ' — ' + t.matras;
+  tihaiTalaSelect.appendChild(opt);
+});
+tihaiTalaSelect.value = 'teentaal';
+
+function computeTihai(){
+  const phrase = Math.max(1, parseInt(document.getElementById('tihaiPhrase').value, 10) || 1);
+  const gap = Math.max(0, parseInt(document.getElementById('tihaiGap').value, 10) || 0);
+  const tala = TALAS.find(t => t.id === tihaiTalaSelect.value) || TALAS[0];
+  const total = phrase * 3 + gap * 2;
+  const rem = total % tala.matras;
+  const startBeat = rem === 0 ? tala.matras : tala.matras - rem;
+  document.getElementById('tihaiTotal').textContent = total + ' matras total';
+  document.getElementById('tihaiStart').textContent =
+    'Begin ' + total + ' matras before Sam — that is matra ' + startBeat + ' of the cycle (counting Sam as 1) — so the third repeat lands exactly on Sam.';
+  const grid = document.getElementById('tihaiGrid');
+  grid.innerHTML = '';
+  for (let r = 0; r < 3; r++){
+    for (let i = 0; i < phrase; i++){
+      const n = document.createElement('div'); n.className = 'tihai-note'; grid.appendChild(n);
+    }
+    if (r < 2){
+      for (let i = 0; i < gap; i++){
+        const n = document.createElement('div'); n.className = 'tihai-note gap'; grid.appendChild(n);
+      }
+    }
+  }
+  const sam = document.createElement('div'); sam.className = 'tihai-note sam'; grid.appendChild(sam);
+  return { phrase, gap, total };
+}
+['tihaiPhrase','tihaiGap'].forEach(id => document.getElementById(id).addEventListener('input', computeTihai));
+tihaiTalaSelect.addEventListener('change', computeTihai);
+computeTihai();
+
+let tihaiSeq = null;
+const tihaiClock = createClock(
+  () => 60 / 96,
+  (step, time) => {
+    if (!tihaiSeq){ tihaiClock.stop(); return; }
+    if (step >= tihaiSeq.length){ tihaiClock.stop(); setTihaiPlayingUI(false); return; }
+    const ev = tihaiSeq[step];
+    if (ev === 'sam') playBell(time);
+    else if (ev === 'hit') playClap(time, 0.6);
+    const delay = Math.max(0, (time - audioCtx.currentTime) * 1000);
+  }
+);
+function setTihaiPlayingUI(playing){
+  const btn = document.getElementById('tihaiPlayBtn');
+  btn.textContent = playing ? '⏸ Stop' : '▶ Play it';
+  btn.classList.toggle('playing', playing);
+}
+document.getElementById('tihaiPlayBtn').addEventListener('click', () => {
+  stopAllClocks();
+  const { phrase, gap } = computeTihai();
+  const seq = [];
+  for (let r = 0; r < 3; r++){
+    for (let i = 0; i < phrase; i++) seq.push('hit');
+    if (r < 2) for (let i = 0; i < gap; i++) seq.push(null);
+  }
+  seq.push('sam');
+  tihaiSeq = seq;
+  ensureCtx();
+  tihaiClock.start();
+  setTihaiPlayingUI(true);
+});
+
+/* ============================================================
+   LEARN TAB
+   ============================================================ */
+const CATS = ['All','Foundations','Structure','Vocabulary'];
+let activeCat = 'All';
+const filterRow = document.getElementById('filterRow');
+CATS.forEach(c => {
+  const chip = document.createElement('button');
+  chip.className = 'chip' + (c === activeCat ? ' active' : '');
+  chip.textContent = c;
+  chip.addEventListener('click', () => {
+    activeCat = c;
+    document.querySelectorAll('#filterRow .chip').forEach(x => x.classList.toggle('active', x === chip));
+    renderConcepts();
+  });
+  filterRow.appendChild(chip);
+});
+
+function renderConcepts(){
+  const list = document.getElementById('conceptList');
+  list.innerHTML = '';
+  CONCEPTS.filter(c => activeCat === 'All' || c.cat === activeCat).forEach(c => {
+    const det = document.createElement('details');
+    det.className = 'concept';
+    det.dataset.term = c.term;
+    const tradName = c.trad === 'H' ? 'Hindustani' : c.trad === 'C' ? 'Carnatic' : 'Both';
+    det.innerHTML =
+      '<summary><span class="term">' + c.term + '</span><span class="tag ' + c.trad + '" style="flex-shrink:0;">' + tradName + '</span></summary>' +
+      '<div class="body"><p class="def">' + c.def + '</p>' +
+      (c.why ? '<p class="why"><b>For jazz ears —</b> ' + c.why + '</p>' : '') +
+      '</div>';
+    list.appendChild(det);
+  });
+}
+renderConcepts();
+
+function openConceptById(term){
+  activeCat = 'All';
+  document.querySelectorAll('#filterRow .chip').forEach(x => x.classList.toggle('active', x.textContent === 'All'));
+  renderConcepts();
+  const det = document.querySelector('.concept[data-term="' + CSS.escape(term) + '"]');
+  if (det){
+    det.open = true;
+    setTimeout(() => det.scrollIntoView({ behavior:'smooth', block:'center' }), 60);
+  }
+}
+
+/* ============================================================
+   LEARNING PATH — curriculum, progress, and review mode
+   ============================================================ */
+const MODULES = [
+  { id:'foundations', title:'1 · Foundations', blurb:'The vocabulary everything else is built from.' },
+  { id:'even', title:'2 · Even cycles', blurb:'Start with symmetrical talas to build a feel for Sam.' },
+  { id:'uneven', title:'3 · Uneven cycles', blurb:'Additive grouping — the seams matter more than the count.' },
+  { id:'subdivide', title:'4 · Subdividing the beat', blurb:'Layakari / gati — splitting one pulse unevenly.' },
+  { id:'poly', title:'5 · Polyrhythms', blurb:'Two pulses, one shared span — straight into jazz cross-rhythm.' },
+  { id:'bols', title:'6 · Bols & solkattu', blurb:'The spoken language that is the notation itself.' },
+  { id:'tihai', title:'7 · Tihai & korvai', blurb:'Resolving a phrase onto Sam — the most jazz-relevant idea here.' },
+  { id:'synth', title:'8 · Bringing it together', blurb:'Combine the layers.' },
+];
+
+const LESSONS = [
+  { id:'f1', mod:'foundations', title:'Laya — tempo', type:'concept', term:'Laya', instruction:'Read about laya, then hum any simple phrase slow, medium, and fast without losing the pulse.' },
+  { id:'f2', mod:'foundations', title:'Sam — the downbeat', type:'concept', term:'Sam', instruction:'Read about Sam — the point every cycle resolves back to.', review:true },
+  { id:'f3', mod:'foundations', title:'Matra — the beat unit', type:'concept', term:'Matra', instruction:'Read the definition, then move on to your first cycle.' },
+  { id:'f4', mod:'foundations', title:'Avartan — the full cycle', type:'concept', term:'Avartan', instruction:'A cycle is a wheel, not a bar that resets. Read why that distinction matters.' },
+
+  { id:'e1', mod:'even', title:'Keherwa (8)', type:'cycle', talaId:'keherwa', instruction:'Play Keherwa at a comfortable tempo. Clap on beats 1 and 5. Loop at least 8 times without losing Sam.' },
+  { id:'e2', mod:'even', title:'Dadra (6)', type:'cycle', talaId:'dadra', instruction:'Six beats in two groups of three — a lilting, waltz-adjacent feel. Clap on 1 and 4.' },
+  { id:'e3', mod:'even', title:'Teentaal (16)', type:'cycle', talaId:'teentaal', instruction:'The default 16-beat cycle. Clap on 1, 5, 13; wave on 9. Try humming any simple melody over it.', review:true },
+
+  { id:'u1', mod:'uneven', title:'Rupak Taal (7)', type:'cycle', talaId:'rupak_h', instruction:'Notice Sam is a khali here — no clap on beat 1. Let that silence still feel like "home."' },
+  { id:'u2', mod:'uneven', title:'Jhaptaal (10)', type:'cycle', talaId:'jhaptaal', instruction:'10 beats as 2+3+2+3. Say the group boundaries out loud instead of counting straight to ten.', review:true },
+  { id:'u3', mod:'uneven', title:'Khanda Chapu (5)', type:'cycle', talaId:'khanda_chapu', instruction:'5 beats (2+3) — the direct cousin of a 5/4 feel.' },
+  { id:'u4', mod:'uneven', title:'Misra Chapu (7)', type:'cycle', talaId:'misra_chapu', instruction:'7 beats (3+4). Of everything in this app, this is the single most useful cycle for odd-meter jazz writing.' },
+
+  { id:'s1', mod:'subdivide', title:'Duple subdivision', type:'subdivide', n:2, instruction:'The most basic split — "Ta Ka." Get it locked before moving on.' },
+  { id:'s2', mod:'subdivide', title:'Triplet feel', type:'subdivide', n:3, instruction:'Say "Ta Ki Ta" out loud along with the clicks.', review:true },
+  { id:'s3', mod:'subdivide', title:'Chatusra (4)', type:'subdivide', n:4, instruction:'"Ta Ka Di Mi" — straight, even subdivision.' },
+  { id:'s4', mod:'subdivide', title:'Khanda gati (5)', type:'subdivide', n:5, instruction:'Five in the space of one beat — "Ta Ka Ta Ki Ta."' },
+
+  { id:'p1', mod:'poly', title:'3 over 2', type:'poly', a:3, b:2, instruction:'The gateway polyrhythm. Tap the teal 2 with your foot, the marigold 3 with your hand.', review:true },
+  { id:'p2', mod:'poly', title:'4 over 3', type:'poly', a:4, b:3, instruction:'Four evenly against three — a staple of modern-jazz displacement.' },
+  { id:'p3', mod:'poly', title:'5 over 4', type:'poly', a:5, b:4, instruction:'A classic cross-rhythm. Isolate each layer before combining them.', review:true },
+  { id:'p4', mod:'poly', title:'7 over 4', type:'poly', a:7, b:4, instruction:'Serious ear training. Go slow — drop the tempo before you try this at speed.' },
+  { id:'p5', mod:'poly', title:'11 over 3', type:'poly', a:11, b:3, instruction:'Wide and wandering — it only realigns once per full cycle. Advanced.' },
+
+  { id:'b1', mod:'bols', title:'Teentaal theka', type:'bols', preset:'Teentaal', instruction:'Recite the theka out loud in time with the clicks before trying to internalize it silently.' },
+  { id:'b2', mod:'bols', title:'Chatusra solkattu', type:'bols', preset:'Chatusra (4)', instruction:'"Ta Ka Di Mi" — the most common solkattu building block.', review:true },
+  { id:'b3', mod:'bols', title:'Misra solkattu', type:'bols', preset:'Misra (7)', instruction:'"Ta Ki Ta Ta Ka Di Mi" — 3+4 spoken as one continuous idea.' },
+
+  { id:'t1', mod:'tihai', title:'Your first tihai', type:'tihai', phrase:3, gap:1, talaId:'teentaal', instruction:'A 3-beat phrase, said three times, with 1-beat gaps. Watch where it lands.', review:true },
+  { id:'t2', mod:'tihai', title:'Tihai inside Rupak', type:'tihai', phrase:5, gap:2, talaId:'rupak_h', instruction:'A longer phrase inside the trickier 7-beat cycle — the math still works the same way.' },
+
+  { id:'z1', mod:'synth', title:'Combine the layers', type:'info', instruction:'You now have the core vocabulary: cycles, subdivision, polyrhythm, bols, and tihai. Try improvising 3-over-2 phrasing across a Misra Chapu (7) cycle, or write a tihai that uses 5-over-4 phrasing to get there. This is where it starts becoming your own.' },
+];
+const REVIEW_LESSONS = LESSONS.filter(l => l.review);
+
+const PROGRESS_KEY = 'avartan_progress_v1';
+function loadProgress(){
+  try {
+    const raw = localStorage.getItem(PROGRESS_KEY);
+    if (raw) return JSON.parse(raw);
+  } catch (e) {}
+  return { completed:{}, lastReviewAt:null, reviewCount:0 };
+}
+function saveProgress(){ try { localStorage.setItem(PROGRESS_KEY, JSON.stringify(progress)); } catch (e) {} }
+let progress = loadProgress();
+
+let activeLesson = null;   // lesson object currently shown in banner
+let reviewMode = false;
+let reviewIndex = 0;
+
+function applyLessonConfig(lesson){
+  if (lesson.type === 'concept'){
+    switchTab('learn'); openConceptById(lesson.term);
+  } else if (lesson.type === 'cycle'){
+    switchTab('cycle'); talaSelect.value = lesson.talaId; selectTala(lesson.talaId);
+  } else if (lesson.type === 'subdivide'){
+    switchTab('subdivide'); setSubdivideMode('single');
+    const chip = document.querySelector('#nPicker .chip[data-n="' + lesson.n + '"]');
+    if (chip) chip.click();
+  } else if (lesson.type === 'poly'){
+    switchTab('subdivide'); setSubdivideMode('poly');
+    applyPolyConfig(lesson.a, lesson.b);
+  } else if (lesson.type === 'bols'){
+    switchTab('bols');
+    const p = PRESETS.find(pr => pr.name === lesson.preset);
+    if (p) loadBolPreset(p);
+  } else if (lesson.type === 'tihai'){
+    switchTab('bols');
+    document.getElementById('tihaiPhrase').value = lesson.phrase;
+    document.getElementById('tihaiGap').value = lesson.gap;
+    tihaiTalaSelect.value = lesson.talaId;
+    computeTihai();
+    setTimeout(() => document.getElementById('tihaiGrid').scrollIntoView({ behavior:'smooth', block:'center' }), 80);
+  } else if (lesson.type === 'info'){
+    switchTab('path');
+  }
+}
+
+function typeLabel(t){
+  return { concept:'Concept', cycle:'Cycle', subdivide:'Subdivide', poly:'Polyrhythm', bols:'Bols', tihai:'Tihai', info:'Info' }[t] || t;
+}
+
+function showBanner(){
+  document.getElementById('lessonBanner').style.display = 'block';
+  document.body.classList.add('has-banner');
+}
+function hideBanner(){
+  document.getElementById('lessonBanner').style.display = 'none';
+  document.body.classList.remove('has-banner');
+}
+
+function renderBanner(){
+  const banner = document.getElementById('lessonBanner');
+  banner.classList.toggle('review', reviewMode);
+  const lesson = activeLesson;
+  if (!lesson){ hideBanner(); return; }
+  showBanner();
+  if (reviewMode){
+    document.getElementById('lbEyebrow').textContent = 'Quick review · ' + (reviewIndex + 1) + ' of ' + REVIEW_LESSONS.length;
+  } else {
+    const idx = LESSONS.findIndex(l => l.id === lesson.id);
+    const mod = MODULES.find(m => m.id === lesson.mod);
+    document.getElementById('lbEyebrow').textContent = 'Lesson ' + (idx + 1) + ' of ' + LESSONS.length + (mod ? ' · ' + mod.title.replace(/^\d+ · /, '') : '');
+  }
+  document.getElementById('lbTitle').textContent = lesson.title;
+  document.getElementById('lbInstruction').textContent = lesson.instruction;
+  const actions = document.getElementById('lbActions');
+  actions.innerHTML = '';
+  if (reviewMode){
+    const prev = document.createElement('button'); prev.className = 'btn'; prev.textContent = '← Prev';
+    prev.disabled = reviewIndex === 0;
+    prev.addEventListener('click', () => stepReview(-1));
+    const next = document.createElement('button'); next.className = 'btn-primary'; next.textContent =
+      (reviewIndex === REVIEW_LESSONS.length - 1) ? 'Finish review' : 'Next →';
+    next.addEventListener('click', () => stepReview(1));
+    const exit = document.createElement('button'); exit.className = 'btn'; exit.textContent = '✕ Exit';
+    exit.addEventListener('click', exitLesson);
+    actions.appendChild(prev); actions.appendChild(next); actions.appendChild(exit);
+  } else {
+    const complete = document.createElement('button'); complete.className = 'btn-primary';
+    complete.textContent = '✓ Complete & next';
+    complete.addEventListener('click', completeAndAdvance);
+    const skip = document.createElement('button'); skip.className = 'btn'; skip.textContent = 'Skip →';
+    skip.addEventListener('click', () => advanceLesson(false));
+    const exit = document.createElement('button'); exit.className = 'btn'; exit.textContent = '✕ Exit';
+    exit.addEventListener('click', exitLesson);
+    actions.appendChild(complete); actions.appendChild(skip); actions.appendChild(exit);
+  }
+}
+
+function startLesson(lesson){
+  reviewMode = false;
+  activeLesson = lesson;
+  applyLessonConfig(lesson);
+  renderBanner();
+}
+function exitLesson(){
+  if (!activeLesson && !reviewMode) return;
+  activeLesson = null;
+  reviewMode = false;
+  hideBanner();
+  if (document.getElementById('tab-path').classList.contains('active')) renderPath();
+}
+function completeAndAdvance(){
+  progress.completed[activeLesson.id] = true;
+  saveProgress();
+  advanceLesson(true);
+}
+function advanceLesson(wasComplete){
+  const idx = LESSONS.findIndex(l => l.id === activeLesson.id);
+  const next = LESSONS[idx + 1];
+  if (next){ startLesson(next); }
+  else { exitLesson(); switchTab('path'); renderPath(); }
+  if (document.getElementById('tab-path').classList.contains('active')) renderPath();
+}
+
+function startReview(){
+  if (REVIEW_LESSONS.length === 0) return;
+  reviewMode = true;
+  reviewIndex = 0;
+  activeLesson = REVIEW_LESSONS[0];
+  applyLessonConfig(activeLesson);
+  renderBanner();
+}
+function stepReview(dir){
+  if (dir > 0 && reviewIndex === REVIEW_LESSONS.length - 1){
+    progress.reviewCount = (progress.reviewCount || 0) + 1;
+    progress.lastReviewAt = new Date().toISOString();
+    saveProgress();
+    exitLesson();
+    switchTab('path');
+    renderPath();
+    return;
+  }
+  reviewIndex = Math.max(0, Math.min(REVIEW_LESSONS.length - 1, reviewIndex + dir));
+  activeLesson = REVIEW_LESSONS[reviewIndex];
+  applyLessonConfig(activeLesson);
+  renderBanner();
+}
+
+function findNextIncompleteLesson(){
+  return LESSONS.find(l => !progress.completed[l.id]) || null;
+}
+
+function renderPath(){
+  const total = LESSONS.length;
+  const done = Object.keys(progress.completed).filter(id => progress.completed[id]).length;
+  document.getElementById('progressNum').textContent = done + ' / ' + total;
+  const circumference = 169.6;
+  const offset = circumference * (1 - (total ? done / total : 0));
+  document.getElementById('progressRingFill').setAttribute('stroke-dashoffset', offset.toFixed(1));
+
+  const meta = document.getElementById('reviewMeta');
+  if (progress.lastReviewAt){
+    const d = new Date(progress.lastReviewAt);
+    meta.textContent = 'Last reviewed ' + d.toLocaleDateString() + ' · reviewed ' + (progress.reviewCount || 0) + ' time' + ((progress.reviewCount||0) === 1 ? '' : 's');
+  } else {
+    meta.textContent = 'You haven\u2019t run a review session yet.';
+  }
+
+  const continueBtn = document.getElementById('continueBtn');
+  const next = findNextIncompleteLesson();
+  continueBtn.textContent = next ? 'Continue' : 'Restart from lesson 1';
+  continueBtn.onclick = () => startLesson(next || LESSONS[0]);
+  document.getElementById('reviewBtn').onclick = startReview;
+
+  const list = document.getElementById('moduleList');
+  list.innerHTML = '';
+  MODULES.forEach(m => {
+    const block = document.createElement('div'); block.className = 'module-block';
+    const h = document.createElement('h3'); h.textContent = m.title; block.appendChild(h);
+    const p = document.createElement('p'); p.className = 'mb-blurb'; p.textContent = m.blurb; block.appendChild(p);
+    LESSONS.filter(l => l.mod === m.id).forEach(l => {
+      const row = document.createElement('div');
+      row.className = 'lesson-row' + (progress.completed[l.id] ? ' done' : '');
+      row.innerHTML =
+        '<span class="check">' + (progress.completed[l.id] ? '✓' : '') + '</span>' +
+        '<span class="lr-title">' + l.title + '</span>' +
+        '<span class="lr-type">' + typeLabel(l.type) + '</span>';
+      row.addEventListener('click', () => startLesson(l));
+      block.appendChild(row);
+    });
+    list.appendChild(block);
+  });
+}
+renderPath();
+switchTab('path');
+
+})();
+</script>
+</body>
+</html>
