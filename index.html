@@ -550,6 +550,33 @@ body.has-banner main{padding-top:158px;}
 "use strict";
 
 /* ============================================================
+   ERROR REPORTING — surfaces real crashes on-screen instead of
+   failing silently, since this runs on devices without a console.
+   ============================================================ */
+function showErrorBanner(msg){
+  let el = document.getElementById('errBanner');
+  if (!el){
+    el = document.createElement('div');
+    el.id = 'errBanner';
+    el.style.cssText = 'position:fixed;left:8px;right:8px;bottom:84px;z-index:999;'
+      + 'background:#c1524f;color:#fff;padding:12px 14px;border-radius:10px;'
+      + 'font-family:monospace;font-size:12px;line-height:1.4;max-height:40vh;overflow:auto;'
+      + 'box-shadow:0 6px 24px rgba(0,0,0,.4);white-space:pre-wrap;';
+    document.body.appendChild(el);
+  }
+  const line = document.createElement('div');
+  line.style.cssText = 'border-top:1px solid rgba(255,255,255,.3); padding-top:6px; margin-top:6px;';
+  line.textContent = new Date().toLocaleTimeString() + ' — ' + msg;
+  el.appendChild(line);
+}
+window.addEventListener('error', (e) => {
+  showErrorBanner((e.message || 'Unknown error') + (e.filename ? ' @' + e.filename.split('/').pop() + ':' + e.lineno : ''));
+});
+window.addEventListener('unhandledrejection', (e) => {
+  showErrorBanner('Promise rejection: ' + (e.reason && e.reason.message ? e.reason.message : e.reason));
+});
+
+/* ============================================================
    DATA
    ============================================================ */
 
@@ -664,13 +691,43 @@ const CONCEPTS = [
    ============================================================ */
 
 let audioCtx = null;
+let audioSupported = null; // null = untested, true/false once known
+const shownMessages = new Set();
+function showErrorBannerOnce(msg){
+  if (shownMessages.has(msg)) return;
+  shownMessages.add(msg);
+  showErrorBanner(msg);
+}
+function nowSec(){
+  return (audioCtx && audioSupported) ? audioCtx.currentTime : performance.now() / 1000;
+}
 function ensureCtx(){
-  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-  if (audioCtx.state === 'suspended') audioCtx.resume();
+  if (audioSupported === false) return null;
+  try {
+    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+    // Capability probe: some sandboxed/embedded webviews expose a stubbed
+    // Web Audio API whose params are read-only. Catch that here, once,
+    // rather than erroring on every scheduled note.
+    const probe = audioCtx.createGain();
+    probe.gain.value = 0.0001;
+    audioSupported = true;
+  } catch (err){
+    audioSupported = false;
+    showErrorBannerOnce('Sound isn\u2019t available in this preview environment, so it\u2019s running silently — everything still works visually. Open the hosted page in Safari to hear it.');
+  }
   return audioCtx;
 }
 
-function playBell(t){
+function safeAudio(fn){
+  return function(){
+    if (!audioCtx || !audioSupported) return; // silent no-op once we know audio can't run here
+    try { fn.apply(null, arguments); }
+    catch (err){ showErrorBannerOnce('Audio error: ' + (err && err.message ? err.message : err)); }
+  };
+}
+
+const playBell = safeAudio(function(t){
   const ctx = audioCtx;
   const o1 = ctx.createOscillator(), o2 = ctx.createOscillator();
   o1.type = 'sine'; o1.frequency.value = 880;
@@ -681,8 +738,8 @@ function playBell(t){
   g.gain.exponentialRampToValueAtTime(0.0001, t + 0.85);
   o1.connect(g); o2.connect(g); g.connect(ctx.destination);
   o1.start(t); o2.start(t); o1.stop(t + 0.9); o2.stop(t + 0.9);
-}
-function playClap(t, vol){
+});
+const playClap = safeAudio(function(t, vol){
   const ctx = audioCtx;
   const size = Math.floor(ctx.sampleRate * 0.05);
   const buffer = ctx.createBuffer(1, size, ctx.sampleRate);
@@ -695,8 +752,8 @@ function playClap(t, vol){
   g.gain.exponentialRampToValueAtTime(0.001, t + 0.11);
   noise.connect(bp); bp.connect(g); g.connect(ctx.destination);
   noise.start(t); noise.stop(t + 0.12);
-}
-function playThud(t, vol){
+});
+const playThud = safeAudio(function(t, vol){
   const ctx = audioCtx;
   const o = ctx.createOscillator(); o.type = 'sine';
   o.frequency.setValueAtTime(170, t);
@@ -706,8 +763,8 @@ function playThud(t, vol){
   g.gain.exponentialRampToValueAtTime(0.001, t + 0.2);
   o.connect(g); g.connect(ctx.destination);
   o.start(t); o.stop(t + 0.22);
-}
-function playTick(t, freq, vol, dur){
+});
+const playTick = safeAudio(function(t, freq, vol, dur){
   const ctx = audioCtx;
   const o = ctx.createOscillator(); o.type = 'square';
   o.frequency.value = freq || 1100;
@@ -716,7 +773,7 @@ function playTick(t, freq, vol, dur){
   g.gain.exponentialRampToValueAtTime(0.001, t + (dur || 0.045));
   o.connect(g); g.connect(ctx.destination);
   o.start(t); o.stop(t + (dur || 0.05));
-}
+});
 function playBolTone(t, tone){
   if (tone === 'low') playThud(t, 0.5);
   else if (tone === 'high') playTick(t, 1500, 0.35, 0.06);
@@ -730,20 +787,25 @@ function createClock(getStepSeconds, onStep){
   const lookaheadMs = 25, scheduleAhead = 0.12;
   function tick(){
     if (!playing) return;
-    const ctx = audioCtx;
-    while (playing && nextTime < ctx.currentTime + scheduleAhead){
-      onStep(step, nextTime);
-      nextTime += getStepSeconds();
-      step++;
+    try {
+      while (playing && nextTime < nowSec() + scheduleAhead){
+        onStep(step, nextTime);
+        nextTime += getStepSeconds();
+        step++;
+      }
+    } catch (err){
+      showErrorBannerOnce('Clock tick error: ' + (err && err.message ? err.message : err));
+      // Don't let one bad tick kill scheduling — nudge forward and keep going.
+      nextTime = nowSec() + scheduleAhead;
     }
     if (playing) timerId = setTimeout(tick, lookaheadMs);
   }
   return {
     start(){
       if (playing) return;
-      ensureCtx();
+      ensureCtx(); // best-effort; clock still runs visually even if this fails
       playing = true; step = 0;
-      nextTime = audioCtx.currentTime + 0.08;
+      nextTime = nowSec() + 0.08;
       tick();
     },
     stop(){ playing = false; clearTimeout(timerId); },
@@ -937,7 +999,7 @@ const cycleClock = createClock(
     const meta = computeBeatMeta(currentTala);
     const idx = step % meta.length;
     scheduleCycleSound(idx, time, meta);
-    const delay = Math.max(0, (time - audioCtx.currentTime) * 1000);
+    const delay = Math.max(0, (time - nowSec()) * 1000);
     setTimeout(() => { highlightWheelBeat(idx); highlightBolTok(idx); }, delay);
   }
 );
@@ -1033,7 +1095,7 @@ const subClock = createClock(
   (step, time) => {
     const within = step % subN;
     if (within === 0) playTick(time, 1000, 0.4, 0.07); else playTick(time, 550, 0.18, 0.05);
-    const delay = Math.max(0, (time - audioCtx.currentTime) * 1000);
+    const delay = Math.max(0, (time - nowSec()) * 1000);
     setTimeout(() => highlightPulse(step), delay);
   }
 );
@@ -1170,7 +1232,7 @@ const polyClock = createClock(
     const stepA = polyResolution / polyA, stepB = polyResolution / polyB;
     const isA = idx % stepA === 0;
     const isB = idx % stepB === 0;
-    const delay = Math.max(0, (time - audioCtx.currentTime) * 1000);
+    const delay = Math.max(0, (time - nowSec()) * 1000);
     if (isA && isB){ playBell(time); }
     else if (isA){ playTick(time, 1500, 0.4, 0.06); }
     else if (isB){ playTick(time, 500, 0.32, 0.08); }
@@ -1287,7 +1349,7 @@ const bolClock = createClock(
     const idx = step % cellCount;
     const b = pattern[idx];
     if (b) playBolTone(time, b.tone); else playTick(time, 700, 0.05, 0.03);
-    const delay = Math.max(0, (time - audioCtx.currentTime) * 1000);
+    const delay = Math.max(0, (time - nowSec()) * 1000);
     setTimeout(() => highlightBolCell(idx), delay);
   }
 );
@@ -1354,7 +1416,7 @@ const tihaiClock = createClock(
     const ev = tihaiSeq[step];
     if (ev === 'sam') playBell(time);
     else if (ev === 'hit') playClap(time, 0.6);
-    const delay = Math.max(0, (time - audioCtx.currentTime) * 1000);
+    const delay = Math.max(0, (time - nowSec()) * 1000);
   }
 );
 function setTihaiPlayingUI(playing){
